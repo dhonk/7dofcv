@@ -45,30 +45,26 @@ pose_options = PoseLandmarkerOptions(
 def draw_hand_landmarks_on_image(rgb_image, detection_result):
     hand_landmarks_list = detection_result.hand_landmarks
     handedness_list = detection_result.handedness
-    annotated_image = np.copy(rgb_image)
-
     for idx in range(len(hand_landmarks_list)):
         hand_landmarks = hand_landmarks_list[idx]
         handedness = handedness_list[idx]
 
         mp_drawing.draw_landmarks(
-            annotated_image,
+            rgb_image,
             hand_landmarks,
             mp_hands.HAND_CONNECTIONS,
             mp_drawing_styles.get_default_hand_landmarks_style(),
             mp_drawing_styles.get_default_hand_connections_style())
 
-        height, width, _ = annotated_image.shape
+        height, width, _ = rgb_image.shape
         x_coordinates = [landmark.x for landmark in hand_landmarks]
         y_coordinates = [landmark.y for landmark in hand_landmarks]
         text_x = int(min(x_coordinates) * width)
         text_y = int(min(y_coordinates) * height) - MARGIN
 
-        cv.putText(annotated_image, f"{handedness[0].category_name}",
+        cv.putText(rgb_image, f"{handedness[0].category_name}",
                    (text_x, text_y), cv.FONT_HERSHEY_DUPLEX,
                    FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv.LINE_AA)
-
-    return annotated_image
 
 
 ArmRecord = dict  # {frame, shoulder_x/y/z, elbow_x/y/z, wrist_x/y/z}
@@ -136,17 +132,14 @@ def plot_arm_tracking(records: list[ArmRecord]) -> None:
 
 def draw_pose_landmarks_on_image(rgb_image, detection_result):
     pose_landmarks_list = detection_result.pose_landmarks
-    annotated_image = np.copy(rgb_image)
 
     pose_landmark_style = mp_drawing_styles.get_default_pose_landmarks_style()
     pose_connection_style = mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2)
 
     for pose_landmarks in pose_landmarks_list:
         mp_drawing.draw_landmarks(
-            image=annotated_image,
+            image=rgb_image,
             landmark_list=pose_landmarks,
             connections=mp.tasks.vision.PoseLandmarksConnections.POSE_LANDMARKS,
             landmark_drawing_spec=pose_landmark_style,
             connection_drawing_spec=pose_connection_style)
-
-    return annotated_image

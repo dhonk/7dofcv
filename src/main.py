@@ -1,32 +1,75 @@
 import cv2 as cv
 import mediapipe as mp
+import threading
 
 from src.vision.video import (
     hand_options, pose_options,
     draw_hand_landmarks_on_image, draw_pose_landmarks_on_image,
     extract_arm_landmarks, save_arm_csv, plot_arm_tracking,
 )
-from src.vision.processing import generate_elbow_angle
+from src.calculation.geometric import generate_elbow_angle
 from src.robot.coppelia import FrankaPanda
 
 HandLandmarker = mp.tasks.vision.HandLandmarker
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
 
-cap = cv.VideoCapture(0)
-cap.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+# Threaded capture to always grab the latest frame and drain the UDP buffer
+class LatestFrameCapture:
+    def __init__(self, src):
+        self.cap = cv.VideoCapture(src, cv.CAP_FFMPEG)
+        if not self.cap.isOpened():
+            raise RuntimeError("Could not open video source")
+        self.lock = threading.Lock()
+        self.frame = None
+        self.ret = False
+        self.stopped = False
+        self.thread = threading.Thread(target=self._reader, daemon=True)
+        self.thread.start()
 
+    def _reader(self):
+        while not self.stopped:
+            ret, frame = self.cap.read()
+            with self.lock:
+                self.ret = ret
+                self.frame = frame
+
+    def read(self):
+        with self.lock:
+            return self.ret, self.frame
+
+    def release(self):
+        self.stopped = True
+        self.thread.join(timeout=2)
+        self.cap.release()
+
+
+PROCESS_WIDTH = 640
+
+print("[INFO] Opening video capture...")
+cap = LatestFrameCapture('udp://0.0.0.0:5005?overrun_nonfatal=1')
+print("[INFO] Video capture opened")
+
+print("[INFO] Connecting to robot...")
 robot = FrankaPanda()
+print("[INFO] Robot connected")
 
 timestamp = 0
 arm_records = []
 
+print("[INFO] Creating landmarkers...")
 with HandLandmarker.create_from_options(hand_options) as h_landmarker:
     with PoseLandmarker.create_from_options(pose_options) as p_landmarker:
+        print("[INFO] Landmarkers ready, entering main loop...")
         while True:
             ret, img = cap.read()
-            if not ret:
-                print('empty camera frame')
-                raise ValueError
+            if not ret or img is None:
+                continue
+
+            # Downscale for faster processing
+            h, w = img.shape[:2]
+            if w > PROCESS_WIDTH:
+                scale = PROCESS_WIDTH / w
+                img = cv.resize(img, (PROCESS_WIDTH, int(h * scale)))
 
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
             hand_res = h_landmarker.detect_for_video(mp_image, timestamp)
@@ -50,13 +93,13 @@ with HandLandmarker.create_from_options(hand_options) as h_landmarker:
                 joints[4] = 0
                 joints[5] = 0
                 joints[6] = 0
-                
+
                 print(elbow_angle)
                 robot.set_joint_angles(joints)
 
-            annotated = draw_hand_landmarks_on_image(img, hand_res)
-            annotated_ = draw_pose_landmarks_on_image(annotated, pose_res)
-            cv.imshow('Hand Tracking', annotated_)
+            draw_hand_landmarks_on_image(img, hand_res)
+            draw_pose_landmarks_on_image(img, pose_res)
+            cv.imshow('Hand Tracking', img)
 
             if cv.waitKey(1) & 0xFF == ord('q'):
                 break
