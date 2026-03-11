@@ -3,3 +3,6 @@ matplotlib
 opencv-python
 coppeliasim-zmqremoteapi-client
 mediapipe
+torch
+torchvision
+

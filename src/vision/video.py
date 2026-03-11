@@ -2,6 +2,9 @@ import math
 import cv2 as cv
 import mediapipe as mp
 import threading
+_RIGHT_SHOULDER = 12
+_RIGHT_ELBOW    = 14
+_RIGHT_WRIST    = 16
 
 mp_hands = mp.tasks.vision.HandLandmarksConnections
 mp_drawing = mp.tasks.vision.drawing_utils
@@ -11,6 +14,17 @@ MARGIN = 10
 FONT_SIZE = 1
 FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54)
+LABEL_FONT_SIZE = 0.45
+LABEL_FONT_THICKNESS = 1
+THETA_COLORS = [
+    (255,  80,  80),  # t1 — red
+    (255, 160,  40),  # t2 — orange
+    (255, 230,  40),  # t3 — yellow
+    ( 80, 220,  80),  # t4 — green
+    ( 40, 200, 255),  # t5 — cyan
+    ( 80,  80, 255),  # t6 — blue
+    (200,  80, 255),  # t7 — violet
+]
 
 
 class LatestFrameCaptureLive:
@@ -77,7 +91,60 @@ def draw_hand_landmarks_on_image(rgb_image, detection_result):
                    FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv.LINE_AA)
 
 
-def draw_pose_landmarks_on_image(rgb_image, detection_result, joints):
+def _draw_theta1_label(rgb_image, pose_landmarks, angle_rad):
+    height, width, _ = rgb_image.shape
+    lm = pose_landmarks[_RIGHT_SHOULDER]
+    cv.putText(rgb_image, f"t1 shoulder rot:{math.degrees(angle_rad):.1f}deg",
+               (int(lm.x * width), int(lm.y * height) - MARGIN),
+               cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, THETA_COLORS[0], LABEL_FONT_THICKNESS, cv.LINE_AA)
+
+def _draw_theta2_label(rgb_image, pose_landmarks, angle_rad):
+    height, width, _ = rgb_image.shape
+    lm = pose_landmarks[_RIGHT_SHOULDER]
+    cv.putText(rgb_image, f"t2 shoulder flex:{math.degrees(angle_rad):.1f}deg",
+               (int(lm.x * width), int(lm.y * height) - MARGIN * 3),
+               cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, THETA_COLORS[1], LABEL_FONT_THICKNESS, cv.LINE_AA)
+
+def _draw_theta3_label(rgb_image, pose_landmarks, angle_rad):
+    height, width, _ = rgb_image.shape
+    lm = pose_landmarks[_RIGHT_SHOULDER]
+    cv.putText(rgb_image, f"t3 arm rot:{math.degrees(angle_rad):.1f}deg",
+               (int(lm.x * width), int(lm.y * height) - MARGIN * 5),
+               cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, THETA_COLORS[2], LABEL_FONT_THICKNESS, cv.LINE_AA)
+
+def _draw_theta4_label(rgb_image, pose_landmarks, angle_rad):
+    height, width, _ = rgb_image.shape
+    lm = pose_landmarks[_RIGHT_ELBOW]
+    cv.putText(rgb_image, f"t4 elbow flex:{math.degrees(angle_rad):.1f}deg",
+               (int(lm.x * width), int(lm.y * height) - MARGIN),
+               cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, THETA_COLORS[3], LABEL_FONT_THICKNESS, cv.LINE_AA)
+
+def _draw_theta5_label(rgb_image, pose_landmarks, angle_rad):
+    height, width, _ = rgb_image.shape
+    lm = pose_landmarks[_RIGHT_ELBOW]
+    cv.putText(rgb_image, f"t5 wrist rot:{math.degrees(angle_rad):.1f}deg",
+               (int(lm.x * width), int(lm.y * height) - MARGIN * 3),
+               cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, THETA_COLORS[4], LABEL_FONT_THICKNESS, cv.LINE_AA)
+
+def _draw_theta6_label(rgb_image, pose_landmarks, angle_rad):
+    height, width, _ = rgb_image.shape
+    lm = pose_landmarks[_RIGHT_WRIST]
+    cv.putText(rgb_image, f"t6 wrist flex:{math.degrees(angle_rad):.1f}deg",
+               (int(lm.x * width), int(lm.y * height) - MARGIN),
+               cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, THETA_COLORS[5], LABEL_FONT_THICKNESS, cv.LINE_AA)
+
+def _draw_theta7_label(rgb_image, pose_landmarks, angle_rad):
+    height, width, _ = rgb_image.shape
+    lm = pose_landmarks[_RIGHT_WRIST]
+    cv.putText(rgb_image, f"t7 wrist flex (stub):{math.degrees(angle_rad):.1f}deg",
+               (int(lm.x * width), int(lm.y * height) - MARGIN * 3),
+               cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, THETA_COLORS[6], LABEL_FONT_THICKNESS, cv.LINE_AA)
+
+
+def draw_pose_landmarks_on_image(rgb_image, detection_result, joints, active_joints=None):
+    if active_joints is None:
+        active_joints = set(range(1, 8))
+
     pose_landmarks_list = detection_result.pose_landmarks
 
     pose_landmark_style = mp_drawing_styles.get_default_pose_landmarks_style()
@@ -91,25 +158,10 @@ def draw_pose_landmarks_on_image(rgb_image, detection_result, joints):
             landmark_drawing_spec=pose_landmark_style,
             connection_drawing_spec=pose_connection_style)
 
-        height, width, _ = rgb_image.shape
-
-        # Shoulder label (landmark 12 = right shoulder)
-        shoulder_text_x = int(pose_landmarks[12].x * width)
-        shoulder_text_y = int(pose_landmarks[12].y * height) - MARGIN
-        cv.putText(rgb_image, f"{math.degrees(joints[1]):.1f}deg",
-                   (shoulder_text_x, shoulder_text_y), cv.FONT_HERSHEY_DUPLEX,
-                   FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv.LINE_AA)
-
-        # Elbow label (landmark 14 = right elbow)
-        elbow_text_x = int(pose_landmarks[14].x * width)
-        elbow_text_y = int(pose_landmarks[14].y * height) - MARGIN
-        cv.putText(rgb_image, f"{math.degrees(joints[3]):.1f}deg",
-                   (elbow_text_x, elbow_text_y), cv.FONT_HERSHEY_DUPLEX,
-                   FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv.LINE_AA)
-
-        # Wrist label (landmark 16 = right wrist)
-        wrist_text_x = int(pose_landmarks[16].x * width)
-        wrist_text_y = int(pose_landmarks[16].y * height) - MARGIN
-        cv.putText(rgb_image, f"{math.degrees(joints[5]):.1f}deg",
-                   (wrist_text_x, wrist_text_y), cv.FONT_HERSHEY_DUPLEX,
-                   FONT_SIZE, HANDEDNESS_TEXT_COLOR, FONT_THICKNESS, cv.LINE_AA)
+        if 1 in active_joints: _draw_theta1_label(rgb_image, pose_landmarks, joints[0])
+        if 2 in active_joints: _draw_theta2_label(rgb_image, pose_landmarks, joints[1])
+        if 3 in active_joints: _draw_theta3_label(rgb_image, pose_landmarks, joints[2])
+        if 4 in active_joints: _draw_theta4_label(rgb_image, pose_landmarks, joints[3])
+        if 5 in active_joints: _draw_theta5_label(rgb_image, pose_landmarks, joints[4])
+        if 6 in active_joints: _draw_theta6_label(rgb_image, pose_landmarks, joints[5])
+        if 7 in active_joints: _draw_theta7_label(rgb_image, pose_landmarks, joints[6])
