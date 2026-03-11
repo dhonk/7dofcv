@@ -5,4 +5,4 @@ coppeliasim-zmqremoteapi-client
 mediapipe
 torch
 torchvision
-
+ikpy

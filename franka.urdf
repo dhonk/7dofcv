@@ -1,0 +1,445 @@
+<?xml version="1.0"?>
+<robot name="Franka">
+    <link name="robot_base">
+        <collision name="Franka">
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="-0.366000 0.375000 0.070000" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_robot_base_coll_1.dae" />
+            </geometry>
+        </collision>
+        <visual name="link">
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="-0.366000 0.375000 0.070000" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_vis_1.dae" />
+            </geometry>
+            <material name="link_material">
+                <color rgba="1.000000 1.000000 1.000000 1.0" />
+            </material>
+        </visual>
+    </link>
+    <joint type="revolute" name="joint">
+        <axis xyz="0 0 1" />
+        <limit lower="-2.8972465991974" effort="87.0" upper="2.8972465991974" velocity="2.1749997138977" />
+        <parent link="robot_base" />
+        <child link="link2_resp" />
+        <origin rpy="-3.141593 3.141593 -3.141593" xyz="-0.324729 0.375012 0.000000" />
+    </joint>
+    <link name="link2_resp">
+        <inertial>
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000027 -0.031145 0.262891" />
+            <inertia izz="0.096472146190744" ixz="1.3128335716866e-05" iyz="0.046543293301451" iyy="0.20795149177852" ixy="1.8036869099987e-05" ixx="0.23965416449794" />
+            <mass value="4.9706840515137" />
+        </inertial>
+        <collision name="link2_resp">
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000023 -0.037262 0.263822" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link2_resp_coll_1.dae" />
+            </geometry>
+        </collision>
+        <collision name="link2_resp">
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000023 -0.037262 0.263822" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link2_resp_coll_2.dae" />
+            </geometry>
+        </collision>
+        <collision name="link2_resp">
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000023 -0.037262 0.263822" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link2_resp_coll_3.dae" />
+            </geometry>
+        </collision>
+        <collision name="link2_resp">
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000023 -0.037262 0.263822" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link2_resp_coll_4.dae" />
+            </geometry>
+        </collision>
+        <visual name="link">
+            <origin rpy="-3.141593 3.141593 -3.141593" xyz="0.000023 -0.037242 0.263855" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_2_vis_1.dae" />
+            </geometry>
+            <material name="link_2_material">
+                <color rgba="1.000000 1.000000 1.000000 1.0" />
+            </material>
+        </visual>
+    </link>
+    <joint type="revolute" name="joint_2">
+        <axis xyz="0 0 1" />
+        <limit lower="-1.7627825737" effort="87.0" upper="1.7627825737" velocity="2.1749997138977" />
+        <parent link="link2_resp" />
+        <child link="link3_resp" />
+        <origin rpy="1.570796 3.141593 3.141593" xyz="-0.000000 -0.000000 0.333000" />
+    </joint>
+    <link name="link3_resp">
+        <collision name="link3_resp">
+            <origin rpy="-1.570796 3.141593 -3.141593" xyz="0.000013 -0.069030 0.037184" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link3_resp_coll_1.dae" />
+            </geometry>
+        </collision>
+        <collision name="link3_resp">
+            <origin rpy="-1.570796 3.141593 -3.141593" xyz="0.000013 -0.069030 0.037184" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link3_resp_coll_2.dae" />
+            </geometry>
+        </collision>
+        <visual name="link">
+            <origin rpy="-1.570796 3.141593 -3.141593" xyz="-0.000003 -0.069076 0.037184" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_3_vis_1.dae" />
+            </geometry>
+            <material name="link_3_material">
+                <color rgba="1.000000 1.000000 1.000000 1.0" />
+            </material>
+        </visual>
+    </link>
+    <joint type="revolute" name="joint_3">
+        <axis xyz="0 0 1" />
+        <limit lower="-2.8972465991974" effort="87.0" upper="2.8972465991974" velocity="2.1749997138977" />
+        <parent link="link3_resp" />
+        <child link="link4_resp" />
+        <origin rpy="-1.570797 3.141593 -3.141593" xyz="-0.000000 0.000000 0.000000" />
+    </joint>
+    <link name="link4_resp">
+        <collision name="link4_resp">
+            <origin rpy="-3.141592 3.141593 3.141593" xyz="0.041373 0.028168 0.281765" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link4_resp_coll_1.dae" />
+            </geometry>
+        </collision>
+        <collision name="link4_resp">
+            <origin rpy="-3.141592 3.141593 3.141593" xyz="0.041373 0.028168 0.281765" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link4_resp_coll_2.dae" />
+            </geometry>
+        </collision>
+        <collision name="link4_resp">
+            <origin rpy="-3.141592 3.141593 3.141593" xyz="0.041373 0.028168 0.281765" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link4_resp_coll_3.dae" />
+            </geometry>
+        </collision>
+        <collision name="link4_resp">
+            <origin rpy="-3.141592 3.141593 3.141593" xyz="0.041373 0.028168 0.281765" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link4_resp_coll_4.dae" />
+            </geometry>
+        </collision>
+        <visual name="link">
+            <origin rpy="-3.141592 3.141593 -3.141593" xyz="0.041158 0.028089 0.281656" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_4_vis_1.dae" />
+            </geometry>
+            <material name="link_4_material">
+                <color rgba="1.000000 1.000000 1.000000 1.0" />
+            </material>
+        </visual>
+        <visual name="link">
+            <origin rpy="-3.141592 3.141593 -3.141593" xyz="0.041158 0.028089 0.281656" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_4_vis_2.dae" />
+            </geometry>
+            <material name="link_4_material">
+                <color rgba="0.250000 0.250000 0.250000 1.0" />
+            </material>
+        </visual>
+    </link>
+    <joint type="revolute" name="joint_4">
+        <axis xyz="0 0 1" />
+        <limit lower="-3.0019662380219" effort="87.0" upper="0.0" velocity="2.1749997138977" />
+        <parent link="link4_resp" />
+        <child link="link5_resp" />
+        <origin rpy="-1.570796 3.141593 -3.141592" xyz="0.082500 -0.000000 0.316000" />
+    </joint>
+    <link name="link5_resp">
+        <collision name="link5_resp">
+            <origin rpy="1.570796 3.141593 3.071779" xyz="-0.038916 0.036337 0.027506" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link5_resp_coll_1.dae" />
+            </geometry>
+        </collision>
+        <collision name="link5_resp">
+            <origin rpy="1.570796 3.141593 3.071779" xyz="-0.038916 0.036337 0.027506" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link5_resp_coll_2.dae" />
+            </geometry>
+        </collision>
+        <collision name="link5_resp">
+            <origin rpy="1.570796 3.141593 3.071779" xyz="-0.038916 0.036337 0.027506" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link5_resp_coll_3.dae" />
+            </geometry>
+        </collision>
+        <collision name="link5_resp">
+            <origin rpy="1.570796 3.141593 3.071779" xyz="-0.038916 0.036337 0.027506" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link5_resp_coll_4.dae" />
+            </geometry>
+        </collision>
+        <collision name="link5_resp">
+            <origin rpy="1.570796 3.141593 3.071779" xyz="-0.038916 0.036337 0.027506" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link5_resp_coll_5.dae" />
+            </geometry>
+        </collision>
+        <collision name="link5_resp">
+            <origin rpy="1.570796 3.141593 3.071779" xyz="-0.038916 0.036337 0.027506" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link5_resp_coll_6.dae" />
+            </geometry>
+        </collision>
+        <visual name="link">
+            <origin rpy="1.570796 3.141593 3.071779" xyz="-0.039111 0.036345 0.027485" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_5_vis_1.dae" />
+            </geometry>
+            <material name="link_5_material">
+                <color rgba="1.000000 1.000000 1.000000 1.0" />
+            </material>
+        </visual>
+        <visual name="link">
+            <origin rpy="1.570796 3.141593 3.071779" xyz="-0.039111 0.036345 0.027485" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_5_vis_2.dae" />
+            </geometry>
+            <material name="link_5_material">
+                <color rgba="0.250000 0.250000 0.250000 1.0" />
+            </material>
+        </visual>
+    </link>
+    <joint type="revolute" name="joint_5">
+        <axis xyz="0 0 1" />
+        <limit lower="-2.8972465991974" effort="12.0" upper="2.8972465991974" velocity="2.610000371933" />
+        <parent link="link5_resp" />
+        <child link="link6_resp" />
+        <origin rpy="1.570796 3.141593 3.071779" xyz="-0.055513 0.388820 -0.000000" />
+    </joint>
+    <link name="link6_resp">
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_1.dae" />
+            </geometry>
+        </collision>
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_2.dae" />
+            </geometry>
+        </collision>
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_3.dae" />
+            </geometry>
+        </collision>
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_4.dae" />
+            </geometry>
+        </collision>
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_5.dae" />
+            </geometry>
+        </collision>
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_6.dae" />
+            </geometry>
+        </collision>
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_7.dae" />
+            </geometry>
+        </collision>
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_8.dae" />
+            </geometry>
+        </collision>
+        <collision name="link6_resp">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="0.000168 0.037213 -0.105096" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link6_resp_coll_9.dae" />
+            </geometry>
+        </collision>
+        <visual name="link">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="-0.000025 0.037473 -0.105129" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_6_vis_1.dae" />
+            </geometry>
+            <material name="link_6_material">
+                <color rgba="1.000000 1.000000 1.000000 1.0" />
+            </material>
+        </visual>
+        <visual name="link">
+            <origin rpy="3.141593 3.141592 3.141592" xyz="-0.000025 0.037473 -0.105129" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_6_vis_2.dae" />
+            </geometry>
+            <material name="link_6_material">
+                <color rgba="0.250000 0.250000 0.250000 1.0" />
+            </material>
+        </visual>
+    </link>
+    <joint type="revolute" name="joint_6">
+        <axis xyz="0 0 1" />
+        <limit lower="-0.017453292384744" effort="12.0" upper="3.7524577584118" velocity="2.610000371933" />
+        <parent link="link6_resp" />
+        <child link="link7_resp" />
+        <origin rpy="-1.570796 3.141593 -3.141593" xyz="-0.000000 -0.000000 0.000000" />
+    </joint>
+    <link name="link7_resp">
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_1.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_2.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_3.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_4.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_5.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_6.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_7.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_8.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_9.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_10.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_11.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_12.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_13.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_14.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_15.dae" />
+            </geometry>
+        </collision>
+        <collision name="link7_resp">
+            <origin rpy="1.570796 3.141593 3.141593" xyz="0.042191 0.013607 0.005347" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link7_resp_coll_16.dae" />
+            </geometry>
+        </collision>
+        <visual name="link">
+            <origin rpy="1.570796 3.141593 3.141592" xyz="0.042086 0.013418 0.005372" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_7_vis_1.dae" />
+            </geometry>
+            <material name="link_7_material">
+                <color rgba="1.000000 1.000000 1.000000 1.0" />
+            </material>
+        </visual>
+        <visual name="link">
+            <origin rpy="1.570796 3.141593 3.141592" xyz="0.042086 0.013418 0.005372" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_7_vis_2.dae" />
+            </geometry>
+            <material name="link_7_material">
+                <color rgba="0.250000 0.250000 0.250000 1.0" />
+            </material>
+        </visual>
+    </link>
+    <joint type="revolute" name="joint_7">
+        <axis xyz="0 0 1" />
+        <limit lower="-2.8972465991974" effort="12.0" upper="2.8972465991974" velocity="2.610000371933" />
+        <parent link="link7_resp" />
+        <child link="link8_resp" />
+        <origin rpy="-1.570796 3.141592 3.141593" xyz="0.088000 0.000000 -0.000000" />
+    </joint>
+    <link name="link8_resp">
+        <collision name="link8_resp">
+            <origin rpy="0.000000 3.141593 -0.595144" xyz="-0.000057 -0.000873 0.103159" />
+            <geometry>
+                <cylinder length="0.0095007419586182" radius="0.030879393219948" />
+            </geometry>
+        </collision>
+        <collision name="link8_resp">
+            <origin rpy="-0.000002 3.141594 -2.065463" xyz="-0.000079 -0.000876 0.076009" />
+            <geometry>
+                <cylinder length="0.045800685882568" radius="0.043132938444614" />
+            </geometry>
+        </collision>
+        <visual name="link">
+            <origin rpy="-0.000000 3.141593 -3.141592" xyz="-0.000079 -0.000877 0.080509" />
+            <geometry>
+                <mesh filename="file://D:/Documents/franka_link_8_vis_1.dae" />
+            </geometry>
+            <material name="link_8_material">
+                <color rgba="1.000000 1.000000 1.000000 1.0" />
+            </material>
+        </visual>
+    </link>
+</robot>

@@ -141,7 +141,7 @@ def _draw_theta7_label(rgb_image, pose_landmarks, angle_rad):
                cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, THETA_COLORS[6], LABEL_FONT_THICKNESS, cv.LINE_AA)
 
 
-def draw_pose_landmarks_on_image(rgb_image, detection_result, joints, active_joints=None):
+def draw_pose_landmarks_on_image(rgb_image, detection_result, joints, active_joints=None, inverse=False):
     if active_joints is None:
         active_joints = set(range(1, 8))
 
@@ -158,10 +158,24 @@ def draw_pose_landmarks_on_image(rgb_image, detection_result, joints, active_joi
             landmark_drawing_spec=pose_landmark_style,
             connection_drawing_spec=pose_connection_style)
 
-        if 1 in active_joints: _draw_theta1_label(rgb_image, pose_landmarks, joints[0])
-        if 2 in active_joints: _draw_theta2_label(rgb_image, pose_landmarks, joints[1])
-        if 3 in active_joints: _draw_theta3_label(rgb_image, pose_landmarks, joints[2])
-        if 4 in active_joints: _draw_theta4_label(rgb_image, pose_landmarks, joints[3])
-        if 5 in active_joints: _draw_theta5_label(rgb_image, pose_landmarks, joints[4])
-        if 6 in active_joints: _draw_theta6_label(rgb_image, pose_landmarks, joints[5])
-        if 7 in active_joints: _draw_theta7_label(rgb_image, pose_landmarks, joints[6])
+        if inverse:
+            height, width, _ = rgb_image.shape
+            wrist = pose_landmarks[_RIGHT_WRIST]
+            shoulder = pose_landmarks[_RIGHT_SHOULDER]
+            dx = wrist.x - shoulder.x
+            dy = wrist.y - shoulder.y
+            dz = wrist.z - shoulder.z
+            px = int(wrist.x * width)
+            py = int(wrist.y * height)
+            label = f"x:{dx:.3f} y:{dy:.3f} z:{dz:.3f}"
+            cv.putText(rgb_image, label, (px + MARGIN, py - MARGIN),
+                       cv.FONT_HERSHEY_DUPLEX, LABEL_FONT_SIZE, (255, 255, 255),
+                       LABEL_FONT_THICKNESS, cv.LINE_AA)
+        else:
+            if 1 in active_joints: _draw_theta1_label(rgb_image, pose_landmarks, joints[0])
+            if 2 in active_joints: _draw_theta2_label(rgb_image, pose_landmarks, joints[1])
+            if 3 in active_joints: _draw_theta3_label(rgb_image, pose_landmarks, joints[2])
+            if 4 in active_joints: _draw_theta4_label(rgb_image, pose_landmarks, joints[3])
+            if 5 in active_joints: _draw_theta5_label(rgb_image, pose_landmarks, joints[4])
+            if 6 in active_joints: _draw_theta6_label(rgb_image, pose_landmarks, joints[5])
+            if 7 in active_joints: _draw_theta7_label(rgb_image, pose_landmarks, joints[6])
