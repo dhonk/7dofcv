@@ -56,6 +56,16 @@ def vec_angle_2d(v1: Point_2D,
     x2, y2 = v2
     return (math.atan2(x1 * y2 - y1 * x2, x1 * x2 + y1 * y2) + 2 * math.pi) % (2 * math.pi) 
 
+def vec_angle_2d_centered(v1: Point_2D,
+                          v2: Point_2D
+                          ) -> float:
+    '''
+    Calculate angle between two 2D vectors, range (0, 2pi) 
+    '''
+    x1, y1 = v1
+    x2, y2 = v2
+    return math.atan2(x1 * y2 - y1 * x2, x1 * x2 + y1 * y2) 
+
 def vec_angle_3d(v1: Point_3D,
                  v2: Point_3D
                  ) -> float:

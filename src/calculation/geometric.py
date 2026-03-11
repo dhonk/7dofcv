@@ -1,3 +1,4 @@
+import math
 from src.calculation.vectors import *
 
 _NOSE = 0
@@ -116,9 +117,15 @@ class human_angles:
         self.center: Point_3D
         self.shoulder: Point_3D
         self.arm: Point_3D
-        self.elbow: Point_3D
+        self.forearm: Point_3D
         self.wrist: Point_3D
         self.mcp: Point_3D
+        self._max_center = 0.0
+        self._max_shoulder = 0.0
+        self._max_arm = 0.0
+        self._max_forearm = 0.0
+        self._max_wrist = 0.0
+        self._max_mcp = 0.0
 
     def update_vectors(self, landmarks):
         self.center = _center_vector(landmarks)
@@ -137,11 +144,11 @@ class human_angles:
         return vec_angle_2d((y1, z1), (y2, z2))
 
     def theta_2(self) -> float:
-        '''
-        shoulder flex
-        '''
-        return vec_angle_3d(self.shoulder, self.arm)
-
+        '''shoulder flex — law of cosines using max observed 2D segment lengths'''
+        x1, y1, _ = self.shoulder
+        x2, y2, _ = self.arm
+        return vec_angle_2d_centered((x1, y1), (x2, y2))
+        
     def theta_3(self) -> float:
         '''
         arm rot
@@ -149,13 +156,11 @@ class human_angles:
         return vec_plane_angle_3d(self.forearm, self.arm, self.shoulder)
 
     def theta_4(self) -> float:
-        '''
-        elbow flex
-        '''
+        '''elbow flex — law of cosines using max observed 2D segment lengths'''
         x1, y1, _ = self.arm
         x2, y2, _ = self.forearm
         return vec_angle_2d((x1, y1), (x2, y2))
-
+        
     def theta_5(self) -> float:
         '''
         forearm rot

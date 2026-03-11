@@ -13,9 +13,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--joint', type=int, nargs='+', choices=range(1, 8),
                         metavar='N', help='Joint(s) to activate (1-7). Default: all.')
+    parser.add_argument('--video', nargs='+', metavar='FILE',
+                        help='Video file(s) to analyze. Default: all *.mp4 in ./videos/')
     args = parser.parse_args()
     active = set(args.joint) if args.joint else set(range(1, 8))
-    video_files = sorted(glob.glob(os.path.join(VIDEOS_DIR, "*.mp4")))
+
+    if args.video:
+        video_files = [os.path.join(VIDEOS_DIR, f) for f in args.video]
+    else:
+        video_files = sorted(glob.glob(os.path.join(VIDEOS_DIR, "*.mp4")))
     if not video_files:
         print(f"No MP4 files found in {VIDEOS_DIR}")
         return
