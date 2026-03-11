@@ -6,3 +6,4 @@ mediapipe
 torch
 torchvision
 ikpy
+pillow

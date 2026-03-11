@@ -60,7 +60,7 @@ def vec_angle_2d_centered(v1: Point_2D,
                           v2: Point_2D
                           ) -> float:
     '''
-    Calculate angle between two 2D vectors, range (0, 2pi) 
+    Calculate angle between two 2D vectors, range (-pi, pi) 
     '''
     x1, y1 = v1
     x2, y2 = v2

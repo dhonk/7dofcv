@@ -159,8 +159,8 @@ class human_angles:
         '''elbow flex — law of cosines using max observed 2D segment lengths'''
         x1, y1, _ = self.arm
         x2, y2, _ = self.forearm
-        return vec_angle_2d((x1, y1), (x2, y2))
-        
+        return vec_angle_2d((x1, y1), (x2, y2)) % math.pi
+
     def theta_5(self) -> float:
         '''
         forearm rot

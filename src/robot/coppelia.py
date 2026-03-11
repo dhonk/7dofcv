@@ -31,3 +31,15 @@ class FrankaPanda:
     def get_joint_angles(self) -> list[float]:
         """Read current joint positions (in radians) for all 7 joints."""
         return [self._sim.getJointPosition(handle) for handle in self._joints]
+
+    def get_joint_forces(self) -> list[float]:
+        """Read the force/torque applied on each joint along its active axis."""
+        return [self._sim.getJointForce(handle) for handle in self._joints]
+
+    def get_joint_vel(self) -> list[float]:
+        """Read the current velocity of each joint (rad/s for revolute joints)."""
+        return [self._sim.getJointVelocity(handle) for handle in self._joints]
+
+    def get_joint_positions_3d(self) -> list[list[float]]:
+        """Return world-space [x, y, z] for each of the 7 joints."""
+        return [self._sim.getObjectPosition(handle, -1) for handle in self._joints]
