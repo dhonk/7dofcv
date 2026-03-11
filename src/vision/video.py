@@ -13,7 +13,7 @@ FONT_THICKNESS = 1
 HANDEDNESS_TEXT_COLOR = (88, 205, 54)
 
 
-class LatestFrameCapture:
+class LatestFrameCaptureLive:
     """Threaded capture to always grab the latest frame and drain the UDP buffer."""
     def __init__(self, src):
         self.cap = cv.VideoCapture(src, cv.CAP_FFMPEG)
