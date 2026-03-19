@@ -1,6 +1,9 @@
 import csv
+import logging
 import os
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 import matplotlib
 matplotlib.use("TkAgg")
@@ -67,7 +70,7 @@ def save_arm_csv(records: list[ArmRecord], path: str | None = None, tag: str | N
         writer = csv.DictWriter(f, fieldnames=CSV_FIELDS, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(records)
-    print(f"Saved {len(records)} frames to {path}")
+    logger.info("Saved %d frames to %s", len(records), path)
 
 
 def plot_arm_tracking(records: list[ArmRecord],
@@ -253,9 +256,12 @@ def plot_pose_3d_animated(records: list[ArmRecord], save_dir: str | None = None)
         _anim.save(os.path.join(save_dir, "pose_3d.gif"), writer="pillow", fps=20)
 
 
-def plot_compare(fk_records: list[ArmRecord], ik_records: list[ArmRecord], headless: bool = False) -> None:
+def plot_compare(fk_records: list[ArmRecord], ik_records: list[ArmRecord],
+                 save_dir: str | None = None, headless: bool = False) -> None:
     if not fk_records or not ik_records:
         return
+    if save_dir is None:
+        save_dir = _make_run_dir()
     n = min(len(fk_records), len(ik_records))
 
     def extract_chain(records):
@@ -295,16 +301,60 @@ def plot_compare(fk_records: list[ArmRecord], ik_records: list[ArmRecord], headl
 
     _anim = animation.FuncAnimation(fig, update, frames=n, interval=50, blit=False)
     fig._anim = _anim
-    save_dir = _make_run_dir()
     _anim.save(os.path.join(save_dir, "compare_fk_ik.gif"), writer="pillow", fps=20)
     if not headless:
         plt.show(block=True)
     plt.close('all')
-    print(f"Plots saved to {save_dir}")
+    logger.info("Compare arm chain saved to %s", save_dir)
+
+
+def plot_compare_eef(fk_records: list[ArmRecord], ik_records: list[ArmRecord],
+                     save_dir: str | None = None, headless: bool = False) -> None:
+    """Plot EEF position (x,y,z) and orientation (alpha,beta,gamma) over time for FK vs IK."""
+    if not fk_records or not ik_records:
+        return
+    if save_dir is None:
+        save_dir = _make_run_dir()
+
+    fig, axes = plt.subplots(2, 3, figsize=(18, 8))
+    fig.suptitle("End-Effector: FK vs IK")
+
+    pos_labels = [("eef_x", "X"), ("eef_y", "Y"), ("eef_z", "Z")]
+    ori_labels = [("eef_alpha", "Alpha"), ("eef_beta", "Beta"), ("eef_gamma", "Gamma")]
+
+    fk_frames = [r["frame"] for r in fk_records]
+    ik_frames = [r["frame"] for r in ik_records]
+
+    for col, (key, label) in enumerate(pos_labels):
+        ax = axes[0, col]
+        ax.plot(fk_frames, [r[key] for r in fk_records], color='blue', label="FK")
+        ax.plot(ik_frames, [r[key] for r in ik_records], color='orange', label="IK")
+        ax.set_title(f"Position {label}")
+        ax.set_ylabel("Position (m)")
+        ax.set_xlabel("Frame")
+        ax.legend()
+        ax.grid(True)
+
+    for col, (key, label) in enumerate(ori_labels):
+        ax = axes[1, col]
+        ax.plot(fk_frames, [r[key] for r in fk_records], color='blue', label="FK")
+        ax.plot(ik_frames, [r[key] for r in ik_records], color='orange', label="IK")
+        ax.set_title(f"Orientation {label}")
+        ax.set_ylabel("Angle (rad)")
+        ax.set_xlabel("Frame")
+        ax.legend()
+        ax.grid(True)
+
+    fig.tight_layout()
+    fig.savefig(os.path.join(save_dir, "compare_eef.png"), dpi=150, bbox_inches="tight")
+    if not headless:
+        plt.show(block=True)
+    plt.close('all')
+    logger.info("Compare EEF plot saved to %s", save_dir)
 
 
 def plot_all(records: list[ArmRecord], active_joints: set[int] | None = None,
-             save_dir: str | None = None) -> None:
+             save_dir: str | None = None, headless: bool = False) -> None:
     if save_dir is None:
         save_dir = make_run_dir()
     for fn in [
@@ -314,6 +364,7 @@ def plot_all(records: list[ArmRecord], active_joints: set[int] | None = None,
         lambda: plot_pose_3d_animated(records, save_dir=save_dir),
     ]:
         fn()
-        plt.show(block=True)
+        if not headless:
+            plt.show(block=True)
         plt.close('all')
-    print(f"Plots saved to {save_dir}")
+    logger.info("Plots saved to %s", save_dir)

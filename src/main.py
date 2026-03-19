@@ -1,5 +1,6 @@
 import argparse
 import glob
+import logging
 import math
 import os
 import time
@@ -9,7 +10,7 @@ from src.vision.process import PoseLandmarker, pose_options, create_mp_image
 from src.calculation.geometric import human_angles
 from src.calculation.inverse_kinematics import solve_ik, get_home_position, get_arm_reach
 from src.robot.coppelia import FrankaPanda
-from src.data_processing.save_data import save_arm_csv, plot_all, plot_compare, make_run_dir
+from src.data_processing.save_data import save_arm_csv, plot_all, plot_compare, plot_compare_eef, make_run_dir
 
 VIDEOS_DIR = "./videos"
 
@@ -25,16 +26,31 @@ def main():
                         help='Compare IK vs geometric approach: timing + joint angle graph.')
     parser.add_argument('--headless', action='store_true',
                         help='Suppress cv.imshow and plt.show for batch/non-display runs.')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Enable detailed logging')
     args = parser.parse_args()
+
+    logging.basicConfig(
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        level=logging.WARNING,
+    )
+    if args.verbose:
+        for name in ("src", "__main__"):
+            logging.getLogger(name).setLevel(logging.DEBUG)
+    logger = logging.getLogger(__name__)
+
     active = set(args.joint) if args.joint else set(range(1, 8))
+    logger.debug("Active joints: %s", sorted(active))
+    logger.debug("Mode: %s", "compare" if args.compare else "IK" if args.inverse else "FK")
 
     if args.video:
         video_files = [os.path.join(VIDEOS_DIR, f) for f in args.video]
     else:
         video_files = sorted(glob.glob(os.path.join(VIDEOS_DIR, "*.mp4")))
     if not video_files:
-        print(f"No MP4 files found in {VIDEOS_DIR}")
+        logger.warning("No MP4 files found in %s", VIDEOS_DIR)
         return
+    logger.debug("Video files: %s", video_files)
 
     ik_home     = get_home_position()
     robot_reach = get_arm_reach()
@@ -48,19 +64,17 @@ def main():
         fk_compute_time = ik_compute_time = 0.0
         cached_lms = []
 
-        # --- FK Pass ---
+        # --- Video decode + MediaPipe (shared overhead) ---
         with PoseLandmarker.create_from_options(pose_options) as landmarker:
             frame_count = 0
             for path in video_files:
                 name = os.path.basename(path)
                 cap = cv.VideoCapture(path)
                 if not cap.isOpened():
-                    print(f"Could not open {path}, skipping.")
+                    logger.warning("Could not open %s, skipping.", path)
                     continue
                 fps = cap.get(cv.CAP_PROP_FPS) or 30
-                computer = human_angles()
-                fk_masked = [0.0] * 7
-                start_time = time.perf_counter()
+                logger.debug("Opened %s (fps=%.1f)", name, fps)
                 while True:
                     ret, frame = cap.read()
                     if not ret:
@@ -73,43 +87,44 @@ def main():
                     result = landmarker.detect_for_video(mp_image, timestamp_ms)
                     lm = result.pose_landmarks[0]
                     cached_lms.append(lm)
-
-                    if frame_count % 5 == 1:
-                        t0 = time.perf_counter()
-                        computer.update_vectors(lm)
-                        fk_thetas = [
-                            computer.theta_1(), computer.theta_2(), computer.theta_3(),
-                            computer.theta_4(), computer.theta_5(), computer.theta_6(),
-                            computer.theta_7()
-                        ]
-                        fk_joints = list(fk_thetas)
-                        fk_joints[3] = -fk_joints[3]
-                        fk_masked = [j if (i + 1) in active else 0.0 for i, j in enumerate(fk_joints)]
-                        fk_compute_time += time.perf_counter() - t0
-                        robot.set_joint_angles(fk_masked)
-
-                    positions = robot.get_joint_positions_3d()
-                    fk_records.append({
-                        "frame": frame_count - 1,
-                        **{f"joint{j+1}_x": positions[j][0] for j in range(7)},
-                        **{f"joint{j+1}_y": positions[j][1] for j in range(7)},
-                        **{f"joint{j+1}_z": positions[j][2] for j in range(7)},
-                    })
-
-                    draw_pose_landmarks_on_image(rgb_frame, result, fk_masked, active, inverse=False)
-                    frame = cv.cvtColor(rgb_frame, cv.COLOR_RGB2BGR)
-                    if not args.headless:
-                        cv.imshow(f"FK - {name}", frame)
-                        if cv.waitKey(1) & 0xFF == ord('q'):
-                            break
-                elapsed = time.perf_counter() - start_time
-                print(f"[FK] [{name}] processed {frame_count} frames in {elapsed:.2f}s")
                 cap.release()
-                cv.destroyAllWindows()
+            logger.info("Decoded %d frames from %d video(s)", frame_count, len(video_files))
 
-        # --- IK Pass ---
+        # --- FK Pass (uses cached landmarks) ---
+        computer = human_angles()
+        fk_masked = [0.0] * 7
+        fk_start = time.perf_counter()
+        for i, lm in enumerate(cached_lms):
+            if i % 5 == 0:
+                t0 = time.perf_counter()
+                computer.update_vectors(lm)
+                fk_thetas = [
+                    computer.theta_1(), computer.theta_2(), computer.theta_3(),
+                    computer.theta_4(), computer.theta_5(), computer.theta_6(),
+                    computer.theta_7()
+                ]
+                fk_joints = list(fk_thetas)
+                fk_joints[3] = -fk_joints[3]
+                fk_masked = [j if (idx + 1) in active else 0.0 for idx, j in enumerate(fk_joints)]
+                fk_compute_time += time.perf_counter() - t0
+                robot.set_joint_angles(fk_masked)
+
+            positions = robot.get_joint_positions_3d()
+            eef_pos, eef_ori = robot.get_eef_pose()
+            fk_records.append({
+                "frame": i,
+                "time": time.perf_counter() - fk_start,
+                **{f"joint{j+1}_x": positions[j][0] for j in range(7)},
+                **{f"joint{j+1}_y": positions[j][1] for j in range(7)},
+                **{f"joint{j+1}_z": positions[j][2] for j in range(7)},
+                "eef_x": eef_pos[0], "eef_y": eef_pos[1], "eef_z": eef_pos[2],
+                "eef_alpha": eef_ori[0], "eef_beta": eef_ori[1], "eef_gamma": eef_ori[2],
+            })
+        fk_wall_time = time.perf_counter() - fk_start
+
+        # --- IK Pass (uses cached landmarks) ---
         prev_ik_angles = None
-        start_time = time.perf_counter()
+        ik_start = time.perf_counter()
         for i, lm in enumerate(cached_lms):
             sh = lm[12]; el = lm[14]; wr = lm[16]
             if i % 5 == 0:
@@ -129,21 +144,39 @@ def main():
                 ik_compute_time += time.perf_counter() - t0
 
             positions = robot.get_joint_positions_3d()
+            eef_pos, eef_ori = robot.get_eef_pose()
             ik_records.append({
                 "frame": i,
+                "time": time.perf_counter() - ik_start,
                 **{f"joint{j+1}_x": positions[j][0] for j in range(7)},
                 **{f"joint{j+1}_y": positions[j][1] for j in range(7)},
                 **{f"joint{j+1}_z": positions[j][2] for j in range(7)},
+                "eef_x": eef_pos[0], "eef_y": eef_pos[1], "eef_z": eef_pos[2],
+                "eef_alpha": eef_ori[0], "eef_beta": eef_ori[1], "eef_gamma": eef_ori[2],
             })
-        elapsed = time.perf_counter() - start_time
-        print(f"[IK] processed {len(cached_lms)} frames in {elapsed:.2f}s")
+        ik_wall_time = time.perf_counter() - ik_start
 
+        n = len(cached_lms)
+        logger.info("[FK] Processed %d frames — wall: %.2fs, compute: %.3fs", n, fk_wall_time, fk_compute_time)
+        logger.info("[IK] Processed %d frames — wall: %.2fs, compute: %.3fs", n, ik_wall_time, ik_compute_time)
         savings = abs(fk_compute_time - ik_compute_time)
         faster = "FK" if fk_compute_time < ik_compute_time else "IK"
-        print(f"FK total compute time: {fk_compute_time:.3f}s")
-        print(f"IK total compute time: {ik_compute_time:.3f}s")
-        print(f"{faster} was faster by {savings:.3f}s ({savings / max(fk_compute_time, ik_compute_time) * 100:.1f}%)")
-        plot_compare(fk_records, ik_records, headless=args.headless)
+        pct = savings / max(fk_compute_time, ik_compute_time) * 100 if max(fk_compute_time, ik_compute_time) > 0 else 0
+        logger.info("Compute comparison: FK %.3fs vs IK %.3fs — %s faster by %.3fs (%.1f%%)", fk_compute_time, ik_compute_time, faster, savings, pct)
+
+        save_dir = make_run_dir(tag="compare")
+
+        summary_path = os.path.join(save_dir, "compare_results.txt")
+        with open(summary_path, "w") as f:
+            f.write(f"FK vs IK Comparison\n")
+            f.write(f"Frames: {n}\n\n")
+            f.write(f"[FK] Wall: {fk_wall_time:.2f}s, Compute: {fk_compute_time:.3f}s\n")
+            f.write(f"[IK] Wall: {ik_wall_time:.2f}s, Compute: {ik_compute_time:.3f}s\n\n")
+            f.write(f"{faster} faster by {savings:.3f}s ({pct:.1f}%)\n")
+        logger.info("Compare results saved to %s", summary_path)
+
+        plot_compare(fk_records, ik_records, save_dir=save_dir, headless=args.headless)
+        plot_compare_eef(fk_records, ik_records, save_dir=save_dir, headless=args.headless)
         return
 
     robot = FrankaPanda()
@@ -169,10 +202,11 @@ def main():
             name = os.path.basename(path)
             cap = cv.VideoCapture(path)
             if not cap.isOpened():
-                print(f"Could not open {path}, skipping.")
+                logger.warning("Could not open %s, skipping.", path)
                 continue
 
             fps = cap.get(cv.CAP_PROP_FPS) or 30
+            logger.debug("Opened %s (fps=%.1f)", name, fps)
             out_path = os.path.join(save_dir, f"landmarks_{os.path.splitext(name)[0]}.mp4")
             writer = None
 
@@ -215,6 +249,8 @@ def main():
                         )
                         joints = solve_ik(target, initial_angles=prev_ik_angles)
                         prev_ik_angles = joints
+                        logger.debug("Frame %d IK target=(%.3f,%.3f,%.3f) joints=%s",
+                                     frame_count - 1, *target, [f"{j:.3f}" for j in joints])
                         robot.set_joint_angles(joints)
                     else:
                         computer.update_vectors(lm)
@@ -230,6 +266,8 @@ def main():
                         joints = list(human_thetas)
                         joints[3] = -joints[3]
                         masked = [j if (i + 1) in active else 0.0 for i, j in enumerate(joints)]
+                        logger.debug("Frame %d FK angles=%s sent=%s",
+                                     frame_count - 1, [f"{j:.3f}" for j in joints], [f"{m:.3f}" for m in masked])
                         robot.set_joint_angles(masked)
 
                 if args.inverse:
@@ -239,6 +277,8 @@ def main():
                 robot_angles = robot.get_joint_angles()
                 robot_forces = robot.get_joint_forces()
                 robot_vels = robot.get_joint_vel()
+                logger.debug("Frame %d robot feedback angles=%s",
+                             frame_count - 1, [f"{a:.3f}" for a in robot_angles])
 
                 # Build landmark coords from pose result
                 el, ix = lm[14], lm[20]
@@ -279,19 +319,20 @@ def main():
                 draw_pose_landmarks_on_image(rgb_frame, result, joints, active, inverse=args.inverse)
                 frame = cv.cvtColor(rgb_frame, cv.COLOR_RGB2BGR)
                 writer.write(frame)
-                cv.imshow(name, frame)
-                key = cv.waitKey(1) & 0xFF
-                if key == ord('q'):
-                    break
+                if not args.headless:
+                    cv.imshow(name, frame)
+                    key = cv.waitKey(1) & 0xFF
+                    if key == ord('q'):
+                        break
             elapsed = time.perf_counter() - start_time
-            print(f"[{name}] processed {frame_count} frames in {elapsed:.2f}s")
+            logger.info("[%s] processed %d frames in %.2fs (%.1f fps)", name, frame_count, elapsed, frame_count / elapsed if elapsed > 0 else 0)
             cap.release()
             if writer is not None:
                 writer.release()
             cv.destroyAllWindows()
 
     save_arm_csv(records, tag=run_tag)
-    plot_all(records, active, save_dir=save_dir)
+    plot_all(records, active, save_dir=save_dir, headless=args.headless)
 
 if __name__ == "__main__":
     main()
